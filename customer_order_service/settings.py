@@ -17,7 +17,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-$qfi93p0%m_2%6!3xc)o(i%wlg
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
 
 # Allowed hosts for the application (set in production)
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']  # Add other allowed hosts if necessary
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -91,6 +92,7 @@ FIREBASE_CLIENT_EMAIL = os.getenv('FIREBASE_CLIENT_EMAIL')
 
 # Initialize Firebase
 initialize_firebase()
+AUTH_USER_MODEL = 'customerorder.User'
 
 # Firebase OIDC Configuration
 OIDC_PROVIDER = {
@@ -139,3 +141,18 @@ STATIC_URL = 'static/'  # URL to access static files
 
 # Default auto field setting
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'],  # Directory for custom templates
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
