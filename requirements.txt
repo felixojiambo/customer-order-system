@@ -84,14 +84,12 @@ pytest-django==4.9.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-jose==3.3.0
-python-jwt==4.1.0
-pywin32==306
+python-jwt
 PyYAML==6.0.2
 referencing==0.35.1
 requests==2.32.3
 requests-toolbelt==0.10.1
 rpds-py==0.20.0
-pywin32==306
 rsa==4.7.2
 s3transfer==0.10.2
 schema==0.7.7
