@@ -1,0 +1,19 @@
+image:
+  repository: ojiamboloc/customer-order-service
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 8000
+
+postgresql:
+  host: "db-postgresql"
+  port: 5432
+  dbname: "customer_order_service"
+  user: "postgres"
+  password: "2024@Savannah"
+
+django:
+  secretKey: "django-insecure-$qfi93p0%m_2%6!3xc)o(i%wlgp-ftup91t&47*te=-b!yr6zu"
+  debug: "True"

@@ -1,0 +1,3 @@
+# Ignore Terraform provider binaries
+terraform/.terraform/
+.terraform/
