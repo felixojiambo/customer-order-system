@@ -1,14 +1,14 @@
 from unittest.mock import patch
-import firebase_admin.auth
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from custorder.models import Order
-from custorder.africastalking_utils import send_sms_alert
-from custorder.authentication import FirebaseAuthentication
-from custorder.serializers import UserSerializer, OrderSerializer
+
+from customerorder.africastalking_utils import send_sms_alert
+from customerorder.authentication import FirebaseAuthentication
+from customerorder.models import Order
+from customerorder.serializers import UserSerializer, OrderSerializer
 from firebase_admin.auth import EmailAlreadyExistsError
 
 User = get_user_model()
@@ -96,7 +96,7 @@ class TestUserLogin:
 
 @pytest.mark.django_db
 class TestOrderViews:
-    @patch('custorder.africastalking_utils.send_sms_alert')  # Mock SMS alert sending
+    @patch('customerorder.africastalking_utils.send_sms_alert')  # Mock SMS alert sending
     def test_order_create_success(self, mock_send_sms_alert):
         # Create a user and authenticate for order creation
         user = User.objects.create_user(username='testuser', password='TestPass123!', email='testuser@example.com',
@@ -167,7 +167,7 @@ class TestOrderViews:
 # Testing Africa's Talking SMS functionality
 @pytest.mark.django_db
 class TestAfricasTalkingUtils:
-    @patch('custorder.africastalking_utils._send_request')  # Mock internal request sending
+    @patch('customerorder.africastalking_utils._send_request')  # Mock internal request sending
     def test_send_sms_alert(self, mock_send_request):
         # Simulate a successful SMS send response
         mock_send_request.return_value = (

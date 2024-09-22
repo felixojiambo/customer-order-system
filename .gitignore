@@ -1,3 +1,7 @@
 # Ignore Terraform provider binaries
 terraform/.terraform/
 .terraform/
+.config
+./config
+# .gitignore
+.env
