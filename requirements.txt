@@ -76,7 +76,6 @@ pyjwkest==1.4.2
 PyJWT==2.9.0
 pyOpenSSL==24.2.1
 pyparsing==3.1.4
-pypiwin32==223
 Pyrebase4==4.8.0
 pytest==8.3.3
 pytest-django==4.9.0
