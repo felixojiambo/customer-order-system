@@ -44,7 +44,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          coverage run -m pytest custorder/tests
+          coverage run -m pytest customerorder/tests
           coverage report
           coverage xml
 
