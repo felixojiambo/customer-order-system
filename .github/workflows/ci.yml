@@ -1,5 +1,19 @@
+# """
+# CI/CD Pipeline - GitHub Actions Workflow
+#
+# This workflow automates the building, testing, and deployment of the Customer Order Service Django application.
+# It triggers on pushes and pull requests to the main branch, sets up the necessary environment, builds the Docker image,
+# runs tests with coverage, and pushes the Docker image to Docker Hub.
+# """
 name: CI/CD Pipeline
 
+# """
+# Trigger Conditions
+#
+# The workflow is triggered in the following scenarios:
+# - On any push to the `main` branch.
+# - On any pull request targeting the `main` branch.
+# """
 on:
   push:
     branches:
@@ -8,53 +22,210 @@ on:
     branches:
       - main
 
+# """
+# Jobs Definition
+#
+# Defines the jobs that will run as part of this workflow. Currently, there's a single job named `build`.
+# """
 jobs:
   build:
+    # """
+    # Runner Specification
+    #
+    # Specifies the type of virtual machine to run the job on. `ubuntu-latest` uses the latest version of Ubuntu.
+    # """
     runs-on: ubuntu-latest
+
+    # """
+    # Service Containers
+    #
+    # Defines additional services required by the job, such as databases. Here, a PostgreSQL service is set up.
+    # The PostgreSQL Alpine image is used for a lightweight and efficient database instance.
+    # """
     services:
       db:
-        image: postgres:16
+        # """
+        # Docker Image
+        #
+        # Uses the PostgreSQL 15 Alpine image from Docker Hub.
+        # Alpine images are lightweight and help in reducing the overall size of the service containers.
+        # """
+        image: postgres:15-alpine
+
+        # """
+        # Environment Variables
+        #
+        # Sets up necessary environment variables for the PostgreSQL service:
+        # - POSTGRES_USER: The username for the PostgreSQL database.
+        # - POSTGRES_PASSWORD: The password for the PostgreSQL user.
+        # - POSTGRES_DB: The name of the default database to create.
+        #
+        # **Security Note**: Avoid hardcoding sensitive information. Consider using GitHub Secrets for passwords.
+        # """
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: 2024@Savannah
-          POSTGRES_DB: customer_order_service
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: main
+
+        # """
+        # Port Configuration
+        #
+        # Maps port 5432 of the service container to port 5432 on the host machine.
+        # This allows the application to communicate with the PostgreSQL database.
+        # """
         ports:
           - 5432:5432
-       
+
+    # """
+    # Steps Definition
+    #
+    # Lists the sequential steps that the job will execute.
+    # """
     steps:
+      # """
+      # Step 1: Check Out the Code
+      #
+      # Uses the `actions/checkout` action to clone the repository's code into the workflow runner.
+      # This is essential for accessing the application's source code during the build and test phases.
+      # """
       - name: Check out the code
         uses: actions/checkout@v2
 
+      # """
+      # Step 2: Set Up Python Environment
+      #
+      # Uses the `actions/setup-python` action to install the specified Python version (3.12) on the runner.
+      # This ensures that the correct Python environment is available for installing dependencies and running tests.
+      # """
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
 
+      # """
+      # Step 3: Cache pip dependencies
+      #
+      # Uses the `actions/cache` action to cache pip dependencies, speeding up subsequent runs.
+      # """
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # """
+      # Step 4: Install Dependencies
+      #
+      # Installs Python package dependencies required by the application. It performs the following sub-steps:
+      # 1. Upgrades `pip` to the latest version.
+      # 2. Installs packages listed in `requirements.txt`.
+      # 3. Installs `coverage`, `pytest`, and `flake8` for running tests, measuring code coverage, and linting.
+      # """
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install coverage pytest
+          pip install coverage pytest flake8
 
+      # """
+      # Step 5: Lint Code with flake8
+      #
+      # Runs `flake8` on the specified directory to check for code quality issues.
+      # """
+      - name: Lint with flake8
+        run: flake8 customerorder/
+
+      # """
+      # Step 6: Wait for PostgreSQL
+      #
+      # Waits for the PostgreSQL service to be ready before running any tests.
+      # """
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h localhost -p 5432; do
+            echo "Waiting for PostgreSQL..."
+            sleep 1
+          done
+
+      # """
+      # Step 7: Apply Migrations
+      #
+      # Applies database migrations before running the tests.
+      # """
+      - name: Apply migrations
+        run: python manage.py migrate
+
+      # """
+      # Step 8: Install Docker Buildx
+      #
+      # Uses the `docker/setup-buildx-action` to set up Docker Buildx, a CLI plugin that extends the Docker command with the full support of the features provided by Moby BuildKit builder toolkit.
+      # Buildx is essential for building multi-platform Docker images and leveraging advanced build features.
+      # """
       - name: Install Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      # """
+      # Step 9: Build Docker Image
+      #
+      # Builds the Docker image for the Customer Order Service using the Dockerfile in the repository.
+      # The image is tagged as `main`.
+      # """
       - name: Build Docker image
-        run: docker build -t customer_order_service .
+        run: docker build -t main .
 
+      # """
+      # Step 10: Run Tests with Coverage
+      #
+      # Executes the test suite using `pytest` and measures code coverage using `coverage`.
+      # It performs the following sub-steps:
+      # 1. Runs tests and collects coverage data.
+      # 2. Generates a coverage report in the console.
+      # 3. Outputs the coverage data in XML format for further analysis or integration with coverage tracking tools.
+      # """
       - name: Run tests with coverage
         run: |
           coverage run -m pytest customerorder/tests
           coverage report
           coverage xml
 
+      # """
+      # Step 11: Log in to Docker Hub
+      #
+      # Uses the `docker/login-action` to authenticate with Docker Hub using credentials stored in GitHub Secrets.
+      # This is necessary for pushing the built Docker image to a Docker Hub repository.
+      #
+      # **Security Note**: Ensure that `DOCKER_USERNAME` and `DOCKER_PASSWORD` are securely stored as GitHub Secrets.
+      # """
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      # """
+      # Step 12: Push Docker Image to Docker Hub
+      #
+      # Tags the built Docker image with the Docker Hub repository name and pushes it to Docker Hub.
+      # It performs the following sub-steps:
+      # 1. Tags the `main` image with the Docker Hub username and the `latest` tag.
+      # 2. Pushes the tagged image to the Docker Hub repository.
+      #
+      # **Note**: Replace `${{ secrets.DOCKER_USERNAME }}` with your actual Docker Hub username stored in GitHub Secrets.
+      # """
       - name: Push Docker image to Docker Hub
+        if: github.ref == 'refs/heads/main'  # Only push for main branch pushes
         run: |
-          docker tag customer_order_service ${{ secrets.DOCKER_USERNAME }}/customer_order_service:latest
+          docker tag main ${{ secrets.DOCKER_USERNAME }}/customer_order_service:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/customer_order_service:latest
+
+      # """
+      # Step 13: Rollback Migrations (for Pull Requests Only)
+      #
+      # Rolls back applied migrations to ensure a clean database state after testing.
+      # This is executed only if the workflow was triggered by a pull request.
+      # """
+      - name: Rollback migrations (for pull requests only)
+        if: github.event_name == 'pull_request'
+        run: python manage.py migrate zero
