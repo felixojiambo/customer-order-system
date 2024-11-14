@@ -1,0 +1,54 @@
+services:
+  rootusersav:
+    image: postgres:15
+    env_file:
+      - .env  # Path to pass environment variables to the container
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5435:5432"
+    networks:
+      - root_network01sav
+
+  root_websav:
+    build:
+      context: ../../
+      dockerfile: config/docker/Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - static_volume:/cust_backend/staticfiles
+      - "/c/Users/OjiamboFelix/OneDrive - sbsl.co.ke/Desktop/TS/customer-order-system/config/firebase/firebase_credentials.json:/cust_backend/config/firebase/firebase_credentials.json"
+#      - "../firebase:/cust_backend/config/firebase"
+    ports:
+      - "8000:8000"
+    depends_on:
+      rootusersav:
+        condition: service_healthy
+    networks:
+      - root_network01sav
+
+# Uncomment and configure ngrok if needed
+#  ngrok:
+#    image: wernight/ngrok
+#    restart: unless-stopped
+#    volumes:
+#      - ../ci_cd/ngrok.yml:/etc/ngrok.yml
+#    command: ngrok start --config /etc/ngrok.yml web
+#    ports:
+#      - "4040:4040"  # ngrok dashboard
+#    networks:
+#      - root_network01sav
+
+volumes:
+  postgres_data:
+  static_volume:
+
+networks:
+  root_network01sav:
+    driver: bridge
