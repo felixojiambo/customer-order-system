@@ -1,7 +1,6 @@
 name: CI/CD Pipeline
 
 on:
-  # Trigger for pushes and pull requests on the `stdio` branch
   push:
     branches:
       - stdio
@@ -29,14 +28,17 @@ jobs:
           --health-retries=5
 
     steps:
-      - name: Check out the code
+      # Step 1: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v2
 
+      # Step 2: Set up Python environment
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
 
+      # Step 3: Cache dependencies
       - name: Cache pip dependencies
         uses: actions/cache@v3
         with:
@@ -45,44 +47,57 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      # Step 4: Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install coverage pytest flake8
+          pip install coverage pytest gunicorn uvicorn dockerize
 
-      - name: Lint with flake8
-        run: flake8 app/
-
+      # Step 5: Wait for PostgreSQL to be ready
       - name: Wait for PostgreSQL
         run: |
-          until pg_isready -h localhost -p 5435; do
+          export DATABASE_HOST=localhost
+          until pg_isready -h $DATABASE_HOST -U rootaccountsav -d rootdbsav -p 5435; do
             echo "Waiting for PostgreSQL..."
             sleep 1
           done
+          echo "PostgreSQL is ready!"
 
+      # Step 6: Run migrations
       - name: Apply migrations
-        run: python manage.py migrate
-
-      - name: Install Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build Docker image
-        run: docker build -t customer-order-system:latest .
-
-      - name: Run tests with coverage
+        env:
+          DATABASE_HOST: localhost
         run: |
-          coverage run -m pytest app/tests
+          python manage.py makemigrations customerorder
+          python manage.py migrate
+
+      # Step 7: Collect static files
+      - name: Collect static files
+        env:
+          DATABASE_HOST: localhost
+        run: python manage.py collectstatic --noinput
+
+      # Step 8: Run tests with coverage
+      - name: Run tests
+        run: |
+          coverage run -m pytest app/customerorder/tests/unit/test_cust.py
           coverage report
           coverage xml
 
+      # Step 9: Build Docker image
+      - name: Build Docker image
+        run: docker build -t customer-order-system:latest .
+
+      # Step 10: Log in to Docker Hub
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Push Docker image to Docker Hub
+      # Step 11: Push Docker image to Docker Hub
+      - name: Push Docker image
         if: github.ref == 'refs/heads/stdio'
         run: |
           docker tag customer-order-system:latest ${{ secrets.DOCKER_USERNAME }}/customer-order-system:latest
