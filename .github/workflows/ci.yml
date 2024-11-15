@@ -17,10 +17,10 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main
+      - stdio
   pull_request:
     branches:
-      - main
+      - stdio
 
 # """
 # Jobs Definition
