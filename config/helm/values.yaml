@@ -1,0 +1,27 @@
+# ------------------------------
+# Helm Values Configuration for Customer Order Service
+# ------------------------------
+
+# Image Configuration
+image:
+  repository: ojiamboloc/customer-order-service
+  tag: "latest"               # Tag specifies the image version to deploy (use "latest" for the latest build)
+  pullPolicy: IfNotPresent    # Controls when Kubernetes pulls the image from the repository
+
+# Service Configuration
+service:
+  type: LoadBalancer           # Exposes the service externally using a load balancer
+  port: 8000                   # The port where the application listens within the container
+
+# PostgreSQL Database Configuration
+postgresql:
+  host: "db-postgresql"        # Hostname or service name for the PostgreSQL database
+  port: 5432                   # Port on which PostgreSQL listens (default is 5432)
+  dbname: "customer_order_service"  # Database name for the Django application
+  user: "postgres"             # Username for database authentication
+  password: "2024@Savannah"    # Password for database authentication (consider using secrets in production)
+
+# Django Application Configuration
+django:
+  secretKey: "django-insecure-$qfi93p0%m_2%6!3xc)o(i%wlgp-ftup91t&47*te=-b!yr6zu"  # Django secret key for security
+  debug: "True"                # Enables Django debug mode; set to "False" in production
