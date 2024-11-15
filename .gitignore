@@ -5,3 +5,5 @@ terraform/.terraform/
 ./config
 # .gitignore
 .env
+__pycache__/
+venv/
