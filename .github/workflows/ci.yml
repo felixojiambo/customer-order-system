@@ -51,6 +51,7 @@ jobs:
           pip install -r requirements.txt
           pip install coverage pytest flake8
 
+      # Linting is disabled. Uncomment if needed
       # - name: Lint with flake8
       #   run: flake8 app/
 
