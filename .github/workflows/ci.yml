@@ -1,7 +1,6 @@
 name: CI/CD Pipeline
 
 on:
-  # Trigger for pushes and pull requests on the `stdio` branch
   push:
     branches:
       - stdio
@@ -51,14 +50,13 @@ jobs:
           pip install -r requirements.txt
           pip install coverage pytest flake8
 
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
       - name: Set environment variables
         run: |
           echo "POSTGRES_HOST=db" >> $GITHUB_ENV
           echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
-
-      # Linting is disabled. Uncomment if needed
-      # - name: Lint with flake8
-      #   run: flake8 app/
 
       - name: Wait for PostgreSQL
         run: |
