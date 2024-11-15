@@ -51,13 +51,18 @@ jobs:
           pip install -r requirements.txt
           pip install coverage pytest flake8
 
+      - name: Set environment variables
+        run: |
+          echo "POSTGRES_HOST=db" >> $GITHUB_ENV
+          echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
+
       # Linting is disabled. Uncomment if needed
       # - name: Lint with flake8
       #   run: flake8 app/
 
       - name: Wait for PostgreSQL
         run: |
-          until pg_isready -h localhost -p 5435; do
+          until pg_isready -h ${{ env.POSTGRES_HOST }} -p ${{ env.POSTGRES_PORT }}; do
             echo "Waiting for PostgreSQL..."
             sleep 1
           done
