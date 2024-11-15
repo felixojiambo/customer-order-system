@@ -3,29 +3,23 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - stdio
+      - main
   pull_request:
     branches:
-      - stdio
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     services:
       db:
-        image: postgres:15
+        image: postgres:16
         env:
-          POSTGRES_USER: rootaccountsav
-          POSTGRES_PASSWORD: r00tsav
-          POSTGRES_DB: rootdbsav
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 2024@Savannah
+          POSTGRES_DB: customer_order_service
         ports:
-          - 5435:5432
-        options: >-
-          --health-cmd="pg_isready -U rootaccountsav -d rootdbsav"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+          - 5432:5432
 
     steps:
       - name: Check out the code
@@ -36,42 +30,19 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install coverage pytest flake8
-
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
-      - name: Set environment variables
-        run: |
-          echo "POSTGRES_HOST=db" >> $GITHUB_ENV
-          echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
+          pip install coverage pytest
 
       - name: Wait for PostgreSQL
         run: |
-          echo "Waiting for PostgreSQL to become available..."
-          timeout=60
-          while ! pg_isready -h ${{ env.POSTGRES_HOST }} -p ${{ env.POSTGRES_PORT }}; do
-            echo "PostgreSQL not ready yet. Retrying..."
-            sleep 2
-            timeout=$((timeout - 2))
-            if [ $timeout -le 0 ]; then
-              echo "PostgreSQL did not become ready in time."
-              exit 1
-            fi
+          until pg_isready -h localhost -p 5432; do
+            echo "Waiting for PostgreSQL..."
+            sleep 1
           done
-          echo "PostgreSQL is ready."
+          echo "PostgreSQL is ready!"
 
       - name: Apply migrations
         run: python manage.py migrate
@@ -80,11 +51,11 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Build Docker image
-        run: docker build -t customer-order-system:latest .
+        run: docker build -t customer_order_service .
 
       - name: Run tests with coverage
         run: |
-          coverage run -m pytest app/tests
+          coverage run -m pytest custorder/tests
           coverage report
           coverage xml
 
@@ -95,7 +66,6 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Push Docker image to Docker Hub
-        if: github.ref == 'refs/heads/stdio'
         run: |
-          docker tag customer-order-system:latest ${{ secrets.DOCKER_USERNAME }}/customer-order-system:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/customer-order-system:latest
+          docker tag customer_order_service ${{ secrets.DOCKER_USERNAME }}/customer_order_service:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/customer_order_service:latest
