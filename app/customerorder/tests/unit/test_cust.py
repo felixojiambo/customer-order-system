@@ -1,3 +1,5 @@
+# app/customerorder/tests/unit/test_cust.py
+
 # ------------------------------
 # 1. Imports and Setup
 # ------------------------------
@@ -11,11 +13,10 @@ from firebase_admin.auth import EmailAlreadyExistsError
 
 from app.customerorder.authentication.authentication import FirebaseAuthentication
 from app.customerorder.integrations.africastalking_utils import send_sms_alert
-from app.customerorder.models.models import Order, User
+from app.customerorder.models.models import Order
 from app.customerorder.serializers.serializers import OrderSerializer, UserSerializer
 
 User = get_user_model()
-
 
 # ------------------------------
 # 2. TestUserRegistration
@@ -72,7 +73,6 @@ class TestUserRegistration:
         assert response.status_code == status.HTTP_400_BAD_REQUEST  # Expect a failure response
         assert 'error' in response.data  # Ensure error is in response
 
-
 # ------------------------------
 # 3. TestUserLogin
 # ------------------------------
@@ -125,7 +125,6 @@ class TestUserLogin:
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED  # Check for failure
         assert 'error' in response.data  # Ensure error is in response
-
 
 # ------------------------------
 # 4. TestOrderViews
@@ -230,7 +229,6 @@ class TestOrderViews:
 
         assert response.status_code == status.HTTP_403_FORBIDDEN  # Expect forbidden response for unauthenticated access
 
-
 # ------------------------------
 # 5. TestAfricasTalkingUtils
 # ------------------------------
@@ -264,7 +262,6 @@ class TestAfricasTalkingUtils:
         assert mock_send_request.called  # Ensure the request was sent
         assert response['status'] == 'Success'  # Validate response status
         assert response['cost'] == '0.8000'  # Validate response cost
-
 
 # ------------------------------
 # 6. TestFirebaseAuthentication
@@ -300,7 +297,6 @@ class TestFirebaseAuthentication:
         assert user.uid == 'firebase_uid'  # Validate the authenticated user's UID
         assert mock_verify_id_token.called  # Ensure the token verification was called
 
-
 # ------------------------------
 # 7. TestModels
 # ------------------------------
@@ -323,7 +319,6 @@ class TestModels:
 
         assert order.order_number.startswith('LA')  # Assuming order number starts with the item's first letters
         assert order.order_number != ''  # Ensure order number is not empty
-
 
 # ------------------------------
 # 8. TestSerializers

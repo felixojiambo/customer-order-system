@@ -7,9 +7,19 @@
         export POSTGRES_USER=postgres
         export POSTGRES_PASSWORD=2024Savannah
         export DJANGO_SECRET_KEY=django-insecure-$qfi93p0%m_2%6!3xc)o(i%wlgp-ftup91t&47*te=-b!yr6zu
+      args:
+        executable: /bin/bash
+      # Ensures that environment variables are set before deploying Helm chart
+      tags:
+        - setup
 
     - name: Deploy Helm chart
       shell: helm upgrade --install customer-order-service ./helm
+      args:
+        executable: /bin/bash
+      # Deploys or updates the Helm chart for the application in the Kubernetes cluster
+      tags:
+        - deploy
 
 - name: Run database migrations
   hosts: all
@@ -17,3 +27,8 @@
     - name: Run Django migrations
       shell: |
         kubectl exec -it $(kubectl get pods -l app=customer-order-service -o jsonpath="{.items[0].metadata.name}") -- python manage.py migrate
+      args:
+        executable: /bin/bash
+      # Executes Django migrations on the first pod of the application to update the database schema
+      tags:
+        - migrate

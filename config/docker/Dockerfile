@@ -34,7 +34,7 @@ ENV PYTHONPATH=/cust_backend:/cust_backend/app
 
 # Copy requirements and install Python dependencies
 COPY ../../requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt --verbose
+RUN pip install -r requirements.txt --verbose
 
 # Copy the entire project directory into the container
 COPY . /cust_backend/
@@ -42,17 +42,17 @@ COPY . /cust_backend/
 # Make the script executable and convert line endings to Unix format
 RUN chmod +x ./config/web/webscript.sh && \
     dos2unix ./config/web/webscript.sh
-
-# Create necessary directories for static files, logs, and Firebase configuration
-RUN mkdir -p /cust_backend/staticfiles /cust_backend/logs /cust_backend/config/firebase
-
-# Adjust permissions for directories to ensure access
-RUN chmod -R 775 /cust_backend/staticfiles /cust_backend/logs /cust_backend/config
-
 # Add a non-root user and group, and assign ownership to all files
 RUN addgroup --system rootgroup && \
     adduser --system --ingroup rootgroup rootdockeruser && \
     chown -R rootdockeruser:rootgroup /cust_backend
+
+# Create necessary directories for static files, logs, and Firebase configuration
+# Set the staticfiles and logs directories to be writable by rootdockeruser
+RUN mkdir -p /cust_backend/staticfiles /cust_backend/logs /cust_backend/config/firebase && \
+    chown -R rootdockeruser:rootgroup /cust_backend/staticfiles /cust_backend/logs /cust_backend/config && \
+    chmod -R 775 /cust_backend/staticfiles /cust_backend/logs /cust_backend/config
+
 
 # Switch to the non-root user
 USER rootdockeruser

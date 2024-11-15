@@ -79,8 +79,7 @@ CSP_STYLE_SRC = ("'self'", "https://cdnjs.cloudflare.com")
 CSP_SCRIPT_SRC = ("'self'", "https://cdnjs.cloudflare.com")
 
 # Root URL configuration
-ROOT_URLCONF = 'main.urls'
-
+ROOT_URLCONF = 'app.main.urls'
 # Firebase configuration from environment
 FIREBASE_API_KEY = env('FIREBASE_API_KEY')
 FIREBASE_PROJECT_ID = env('FIREBASE_PROJECT_ID')
@@ -136,6 +135,8 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = 'static/'
+
+STATIC_ROOT = "/cust_backend/staticfiles"
 
 # Default auto field setting
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
