@@ -138,6 +138,7 @@ STATIC_URL = 'static/'
 
 STATIC_ROOT = "/cust_backend/staticfiles"
 
+
 # Default auto field setting
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -164,3 +165,34 @@ CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS').split(',')
 # Logging Configuration
 LOGGING_LEVEL = env('LOGGING_LEVEL', default='ERROR')
 LOGGING_FILE_PATH = env('LOGGING_FILE_PATH', default='error.log')
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': LOGGING_LEVEL,
+            'class': 'logging.FileHandler',
+            'filename': LOGGING_FILE_PATH,
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': LOGGING_LEVEL,
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['file', 'console'],
+        'level': LOGGING_LEVEL,
+    },
+}

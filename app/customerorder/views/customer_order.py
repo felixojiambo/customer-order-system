@@ -8,6 +8,7 @@ from firebase_admin import auth as firebase_auth
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError  # Add this import
 
 from app.customerorder.authentication.authentication import FirebaseAuthentication
 from app.customerorder.integrations.africastalking_utils import send_sms_alert
@@ -16,9 +17,9 @@ from app.customerorder.serializers.serializers import UserSerializer, OrderSeria
 
 logger = logging.getLogger(__name__)
 
-# ------------------------------
-# 2. RegisterView
-# ------------------------------
+#------------------------------
+#2. RegisterView
+#------------------------------
 class RegisterView(generics.CreateAPIView):
     """
     API view for user registration. Creates a Firebase user and saves them in the local database.
@@ -63,6 +64,61 @@ class RegisterView(generics.CreateAPIView):
         except Exception as e:
             logger.error(f"Registration error: {str(e)}")
             return Response({"error": "An error occurred during registration."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ------------------------------
+# 7. HealthCheckView
+# ------------------------------
+class HealthCheckView(generics.GenericAPIView):
+    """
+    API view for health check. Returns a simple success response.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs) -> Response:
+        """
+        Responds with a success message to indicate the server is running.
+
+        Args:
+            request: The HTTP GET request.
+
+        Returns:
+            Response: A success message with a 200 OK status.
+        """
+        return Response({"status": "ok"}, status=status.HTTP_200_OK)
+
+# class RegisterView(generics.CreateAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#     permission_classes = [AllowAny]
+#
+#     def create(self, request, *args, **kwargs) -> Response:
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#
+#         try:
+#             email = serializer.validated_data['email']
+#             password = serializer.validated_data['password']
+#             phone_number = serializer.validated_data.get('phone_number')
+#
+#             # Firebase user creation
+#             firebase_user = firebase_auth.create_user(email=email, password=password)
+#             user = User(
+#                 username=serializer.validated_data['username'],
+#                 email=email,
+#                 phone_number=phone_number,
+#                 uid=firebase_user.uid
+#             )
+#             user.save()
+#
+#             logger.info(f"User registered successfully: {email}")
+#             return Response({"uid": firebase_user.uid, "email": email}, status=status.HTTP_201_CREATED)
+#
+#         except firebase_auth.EmailAlreadyExistsError:
+#             raise ValidationError({"email": "A user with this email already exists."})
+#         except Exception as e:
+#             logger.error(f"Registration error: {str(e)}")
+#             raise ValidationError({"error": f"Registration failed: {str(e)}"})
 
 # ------------------------------
 # 3. LoginView
